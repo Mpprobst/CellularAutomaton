@@ -1,0 +1,285 @@
+"---------------------Card-----------------------"
+"--Subclasses: RedCard, BlackCard"
+
+Object subclass: #Card .
+Card instanceVariableNames: 'Number Color' .
+
+Card extend [
+	setValue: value [
+		Number := value .
+	"Color subclass holds a different instance of Number than its parent,
+	 this will be used as a place to store an updated number when the deck needs to update its card number at each time step."
+		Color setNumber: value .
+	]
+]
+
+Card extend [
+	getValue [
+		^Number .
+	]
+
+]
+
+Card extend [
+	setCardColor: suitIdentifier [		"suitIdentifier is an integer 1 - 4 where 1, 2, 3, 4 indicates club, diamond, heart, spade, respectively."
+		(suitIdentifier = 1)|(suitIdentifier = 4) ifTrue: [Color := (BlackCard new)] . 
+		(suitIdentifier = 2)|(suitIdentifier = 3) ifTrue: [Color := (RedCard new)] .
+		Color setCardSuit: suitIdentifier .
+	]
+]
+
+Card extend [
+	getCardColor [
+		^Color .		
+	]
+]
+
+Card extend [
+	printCard [	"prints the value and suit of a card"
+	|suitIden|
+		Number print .
+		
+		suitIden := Color getCardSuit .
+		(suitIden = 1) ifTrue: ['C ' display] .
+		(suitIden = 2) ifTrue: ['D ' display] .
+		(suitIden = 3) ifTrue: ['H ' display] .
+		(suitIden = 4) ifTrue: ['S ' display] .
+		
+	]	
+]
+
+Card extend [
+	applyModifiers [	"this function is utilized so that all cards can be modified based on the deck in its original state of the current time step"
+	|localColor suitIden|
+		localColor := self getCardColor .
+		Number := localColor getUpdatedNumber .
+		(Number > 13) ifTrue: [
+			Number := ((Number - 1) \\ 13) + 1 .
+			suitIden := localColor getCardSuit .
+			suitIden := (suitIden \\ 4) + 1 . 	"advances suit circularly"
+			self setCardColor: suitIden 
+		] .
+	]
+]
+
+"-------------BlackCard----------------"
+"--Subclass of Card"
+"--Subclasses: Club, Spade"
+
+Card subclass: #BlackCard .
+BlackCard instanceVariableNames: 'Suit' .
+
+BlackCard extend [
+	setNumber: value [
+		Number := value .
+	]	
+]
+
+BlackCard extend [
+	getUpdatedNumber [
+		^Number .
+	]
+]
+
+BlackCard extend [
+        setCardSuit: suitIdentifier [
+                (suitIdentifier = 1) ifTrue: [Suit := (Club new)] .
+                (suitIdentifier = 4) ifTrue: [Suit := (Spade new)] .
+                Suit setIdentifier: suitIdentifier .
+		]
+]
+
+BlackCard extend [
+        getCardSuit [
+	|identifier|
+                ^identifier := Suit getIdentifier.
+        ]
+]
+
+BlackCard extend [	 "this determines the new number of the card. Number is not limited to 13 here because it is when the suit is being advanced"
+        modifyCard: LNeighborValue bar: RNeighborValue [
+		Number := LNeighborValue * RNeighborValue .
+	]
+]
+
+"-----------Club-------------"
+"--Subclass of BlackCard"
+
+BlackCard subclass: #Club .
+Club instanceVariableNames: 'ClubIdentifier' .
+
+Club extend [
+        setIdentifier: identifier [
+                ClubIdentifier := identifier .
+        ]
+]
+
+Club extend [
+        getIdentifier [
+                ^ClubIdentifier .
+        ]
+]
+
+"----------Spade-------------"
+"--Subclass of BlackCard"
+
+BlackCard subclass: #Spade .
+Spade instanceVariableNames: 'SpadeIdentifier' .
+
+Spade extend [
+        setIdentifier: identifier [
+                SpadeIdentifier := identifier .
+        ]
+]
+
+
+Spade extend [
+        getIdentifier [
+                ^SpadeIdentifier .
+        ]
+]
+
+"--------------RedCard-----------------"
+"--Subclass of card"
+"--Subclasses: Diamond, Heart"
+
+Card subclass: #RedCard .
+RedCard instanceVariableNames: 'Suit' .
+
+RedCard extend [
+        setCardSuit: suitIdentifier [
+                (suitIdentifier = 2) ifTrue: [Suit := (Diamond new)] .
+                (suitIdentifier = 3) ifTrue: [Suit := (Heart new)] .
+		Suit setIdentifier: suitIdentifier .
+		]
+]
+
+RedCard extend [
+        getCardSuit [
+	|identifier|
+                ^identifier := Suit getIdentifier.
+        ]
+]
+
+RedCard extend [
+        setNumber: value[
+                Number := value .
+        ]
+]
+
+RedCard extend [
+        getUpdatedNumber [
+                ^Number .
+        ]
+]
+
+RedCard extend [
+	modifyCard: LNeighborValue bar: RNeighborValue [	"this determines the new number of the card. Number is not limited to 13 here because it is when the suit is being advanced"
+		Number := (LNeighborValue + RNeighborValue) .
+        ]
+]
+
+"---------Diamond------------"
+"--Subclass of Redcard"
+
+RedCard subclass: #Diamond .
+Diamond instanceVariableNames: 'DiamondIdentifier' .
+
+Diamond extend [
+	setIdentifier: identifier [
+		DiamondIdentifier := identifier . 
+	]
+]
+
+Diamond extend [
+ 	getIdentifier [
+                ^DiamondIdentifier .
+        ]
+]	
+
+"-----------Heart------------"
+"--Subclass of RedCard"
+
+RedCard subclass: #Heart .
+Heart instanceVariableNames: 'HeartIdentifier' .
+
+Heart extend [
+        setIdentifier: identifier [
+                HeartIdentifier := identifier .
+        ]
+]
+
+Heart extend [
+        getIdentifier [
+                ^HeartIdentifier .
+        ]
+]
+	
+"---------------------MAIN-----------------------"
+	
+"Like before, SuitIndex will hold the integer value which correlates to the suit of card."
+|Deck CardsInDeck DeckIndex SuitsInDeck SuitIndex CardsInSuit CardIterator RedCount BlackCount|
+        
+	CardsInDeck := 52 .	"a standard deck of cards has 52 cards"
+	SuitsInDeck := 4 .	"a standard deck of cards has 4 suits: Club, Diamond, Heart, and Spade"
+	CardsInSuit := 13 .	"a standard dec of cards has 13 cards in each suit"
+        DeckIndex := 1 .	"traverses the deck of cards"
+	SuitIndex := 1 .	"for initializing card suits. SuitIndex is incremented every 13 cards"
+	CardIterator := 1 .	"for initializing card suits. CardIterator is the condition for incrementing SuitIndex"
+	
+"POPULATE THE DECK OF CARDS"
+	Deck := Array new: CardsInDeck .
+        [DeckIndex <= CardsInDeck] whileTrue: [
+	|thisCard|
+		(CardIterator > 13) ifTrue: [
+			CardIterator := 1 .
+			SuitIndex := SuitIndex + 1] .
+		thisCard := Card new .
+		thisCard setCardColor: SuitIndex .
+		thisCard setValue: CardIterator .	
+		Deck at: DeckIndex put: thisCard .
+		DeckIndex := DeckIndex + 1 .
+		CardIterator := CardIterator + 1 .
+	] .
+"RUN THE AUTOMATON"
+	SuitIndex := 1 .
+	|timeStepCount maxTimeSteps |
+	timeStepCount := 0 .
+	maxTimeSteps := 20 .		"runs the automaton 20 times"
+	[timeStepCount <= maxTimeSteps ] whileTrue: [
+	|CurrCard CurrColor LNeighbor RNeighbor LIndex RIndex|
+
+		DeckIndex := 1 .
+		RedCount := 0 .
+        	BlackCount := 0 .
+		 [DeckIndex <= CardsInDeck] whileTrue: [
+                        CurrCard := Deck at: DeckIndex .
+			CurrCard applyModifiers .
+			CurrCard printCard .
+			CurrColor := CurrCard getCardColor .
+			(CurrColor getCardSuit = 1) ifTrue: [BlackCount := BlackCount + 1] ifFalse: [
+				(CurrColor getCardSuit = 4) ifTrue: [BlackCount := BlackCount + 1] ifFalse: [RedCount := BlackCount + 1]].
+                        DeckIndex := DeckIndex + 1 .
+                        ] .
+		'.' displayNl . "for printing a new line before displaying red and black card counts."
+		'Number of red cards: ' display .
+		RedCount print .
+		'; Number of black cards: ' display .
+		BlackCount printNl .
+		DeckIndex := 1 .
+		[DeckIndex <= CardsInDeck] whileTrue: [
+			CurrCard := Deck at: DeckIndex .
+			LIndex := DeckIndex - 1 .
+			RIndex := DeckIndex + 1 .
+			(LIndex < 1) ifTrue: [LIndex := 52] .
+			(RIndex > 52) ifTrue: [RIndex := 1] .
+			LNeighbor := Deck at: LIndex .
+			RNeighbor := Deck at: RIndex .
+			CurrColor := CurrCard getCardColor .
+			CurrColor modifyCard: (LNeighbor getValue) bar: (RNeighbor getValue) .
+			DeckIndex := DeckIndex + 1 .
+			] .
+		timeStepCount := timeStepCount + 1 .
+		] .
+'terminating...' displayNl .
+"END"
